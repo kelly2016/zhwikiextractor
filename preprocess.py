@@ -7,6 +7,7 @@
 
 from zhtools.langconv import *
 import logging, jieba, os, re
+from functools import lru_cache
 
 PUNCTUATION_PATTERN = r'\”|\《|\。|\{|\！|？|｡|\＂|＃|＄|％|\＆|\＇|（|）|＊|＋|，|－|／|：|；|＜|＝|＞|＠|\［|\＼|\］|\＾|＿|｀|\～|｟|｠|\、|〃|》|「|」|『|』|【|】|〔|〕|〖|〗|〘|〙|〚|〛|〜|\〝|\〞|〟|〰|〾|〿|–—|\‘|\“|\„|\‟|\…|\‧|﹏|\.'
 program = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
@@ -25,7 +26,7 @@ def Traditional2Simplified(sentence):
 def punctuation(ustring):
     return re.sub(PUNCTUATION_PATTERN, '', ustring)
 
-
+@lru_cache(maxsize=2 ** 10)
 def get_stopwords(stopwordsFile = "../stop_words/stopwords.txt"):
     logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
     # 加载停用词表
@@ -98,7 +99,8 @@ def generate_corpus(zhwiki_path,save_path,N,stopwordsFile):
         logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s', level=logging.INFO)
         file_path = os.path.join(zhwiki_path, str("wiki_0%s" % str(i)))
         parse_zhwiki(file_path, os.path.join(save_path, "zh_wiki_corpus0%s" % str(i)),stopwordsFile)
-        logger.info("running save ", os.path.join(save_path, "zh_wiki_corpus0%s" % str(i))," successfully !")
+        print("running save ", os.path.join(save_path, "zh_wiki_corpus0%s" % str(i))," successfully !")
+
 
 
 def merge_corpus(inputDir,outputdir):
@@ -120,12 +122,9 @@ def merge_corpus(inputDir,outputdir):
             line = file.readline()
         file.close()
     output.close()
+    print("merge successfully !")
 
 if __name__ == '__main__':
-    regex_str = "[^<doc.*>$]"
-    match_obj = re.match(regex_str, '<doc id=/"988340/" url=/"https://zh.wikipedia.org/wiki?curid=988340/" title=/"白花八角/">')
-
-
     #traditional_sentence = '憂郁的臺灣烏龜'
     #simplified_sentence = Traditional2Simplified(traditional_sentence)
     #print(simplified_sentence)
@@ -135,4 +134,4 @@ if __name__ == '__main__':
     #解析整合
     generate_corpus(zhwiki_path, save_path, 3,stopwordsFile)
     #合并文件为一个
-    merge_corpus(zhwiki_path, save_path)
+    merge_corpus(save_path, save_path)
